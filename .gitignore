@@ -1,0 +1,14 @@
+# Pycharm/IDE files
+.idea/
+__pycache__/
+venv/
+
+# Audio files (Don't upload large audio to GitHub)
+*.wav
+*.mp3
+*.flac
+*.m4a
+
+# OS files
+.DS_Store
+Thumbs.db
