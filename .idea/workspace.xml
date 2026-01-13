@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9d1d99b9-51f2-464c-a5c2-a0c73edc6276" name="Changes" comment="Phase 1 complete">
+    <list default="true" id="9d1d99b9-51f2-464c-a5c2-a0c73edc6276" name="Changes" comment="Fades">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -86,7 +86,7 @@
       <updated>1768223256797</updated>
       <workItem from="1768223257988" duration="4088000" />
       <workItem from="1768227362308" duration="970000" />
-      <workItem from="1768305289797" duration="733000" />
+      <workItem from="1768305289797" duration="2624000" />
     </task>
     <task id="LOCAL-00001" summary="Initial setup: Audio Snipping logic and gitignore.">
       <option name="closed" value="true" />
@@ -120,7 +120,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768227973280</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Fades">
+      <option name="closed" value="true" />
+      <created>1768306040656</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1768306040656</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -131,7 +139,8 @@
     <MESSAGE value="added normalization" />
     <MESSAGE value="Eq section" />
     <MESSAGE value="Phase 1 complete" />
-    <option name="LAST_COMMIT_MESSAGE" value="Phase 1 complete" />
+    <MESSAGE value="Fades" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fades" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/AudionMasteringTool$main.coverage" NAME="main Coverage Results" MODIFIED="1768225736492" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
