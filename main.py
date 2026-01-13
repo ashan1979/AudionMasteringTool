@@ -1,6 +1,20 @@
 import os
 from pydub import AudioSegment, effects
 
+# -- Stereo Width Function
+def apply_stereo_width(audio, delay_ms=20):
+    if audio.channels == 1:
+        audio = audio.set_channels(2)
+
+    channels = audio.split_to_mono()
+    left_channel = channels[0]
+    right_channel = channels[1]
+
+    silence = AudioSegment.silent(duration=delay_ms)
+    delayed_right = (silence + right_channel)[:len(left_channel)]
+
+    return AudioSegment.from_mono_audiostreams(left_channel, delayed_right)
+
 def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=80, lp_cutoff=10000, fade_ms=50, export_format="wav"):
     # pydub works in milliseconds
     start_ms = start_sec * 1000
@@ -25,9 +39,12 @@ def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=80, lp_cut
     if normalized.max_dBFS > -0.1:
         normalized = normalized - (normalized.max_dBFS + 0.1)
 
+    # --- Stereo Widening ---
+    print(f"Applying Stereo Widening---")
+    widened = apply_stereo_width(normalized, delay_ms=25)
     # --- Fades ---
     print(f"Applying {fade_ms}ms Fades...")
-    final_audio = normalized.fade_in(fade_ms).fade_out(fade_ms)
+    final_audio = widened.fade_in(fade_ms).fade_out(fade_ms)
 
     # Export
     final_audio.export(output_file, format=export_format)
