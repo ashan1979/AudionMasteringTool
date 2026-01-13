@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9d1d99b9-51f2-464c-a5c2-a0c73edc6276" name="Changes" comment="Eq section">
-      <change beforePath="$PROJECT_DIR$/.idea/AudionMasteringTool.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/AudionMasteringTool.iml" afterDir="false" />
+    <list default="true" id="9d1d99b9-51f2-464c-a5c2-a0c73edc6276" name="Changes" comment="Phase 1 complete">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -86,7 +85,8 @@
       <option name="presentableId" value="Default" />
       <updated>1768223256797</updated>
       <workItem from="1768223257988" duration="4088000" />
-      <workItem from="1768227362308" duration="523000" />
+      <workItem from="1768227362308" duration="970000" />
+      <workItem from="1768305289797" duration="733000" />
     </task>
     <task id="LOCAL-00001" summary="Initial setup: Audio Snipping logic and gitignore.">
       <option name="closed" value="true" />
@@ -112,7 +112,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768226742474</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Phase 1 complete">
+      <option name="closed" value="true" />
+      <created>1768227973280</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1768227973280</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -122,7 +130,8 @@
     <MESSAGE value="Initial setup: Audio Snipping logic and gitignore." />
     <MESSAGE value="added normalization" />
     <MESSAGE value="Eq section" />
-    <option name="LAST_COMMIT_MESSAGE" value="Eq section" />
+    <MESSAGE value="Phase 1 complete" />
+    <option name="LAST_COMMIT_MESSAGE" value="Phase 1 complete" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/AudionMasteringTool$main.coverage" NAME="main Coverage Results" MODIFIED="1768225736492" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

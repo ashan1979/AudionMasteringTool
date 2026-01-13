@@ -1,6 +1,6 @@
 from pydub import AudioSegment, effects
 
-def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=80, lp_cutoff=10000, export_format="wav"):
+def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=80, lp_cutoff=10000, fade_ms=50, export_format="wav"):
     # pydub works in milliseconds
     start_ms = start_sec * 1000
     end_ms = end_sec * 1000
@@ -20,8 +20,12 @@ def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=80, lp_cut
     normalized_snip = effects.normalize(filtered)
     # --------------------------
 
-    # Use the export_format variable here
-    normalized_snip.export(output_file, format=export_format)
+    # --- Fades ---
+    print(f"Applying {fade_ms}ms Fades...")
+    final_audio = normalized_snip.fade_in(fade_ms).fade_out(fade_ms)
+
+    # Export
+    final_audio.export(output_file, format=export_format)
     print(f"Successfully saved {output_file} as {export_format.upper()}")
 
 # Example usage (uncomment and change 'my_song.wav' to a real file you have)
