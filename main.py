@@ -1,5 +1,8 @@
 import hashlib
 import os
+import datetime
+from time import strftime
+
 from pydub import AudioSegment, effects
 
 # --- File Integrity
@@ -57,12 +60,13 @@ def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=80, lp_cut
 
     # Export
     final_audio.export(output_file, format=export_format)
+    now = datetime.datetime.now(),strftime("%H:%M:%S")
 
     # Integrity Signature
     sig = generate_file_hash(output_file)
 
-    print(f"Done: {output_file}")
-    print(f"SHA-256 Signature: {sig}")
+    print(f"[{now}] Done: {output_file}")
+    print(f"[{now}] SHA-256 Signature: {sig}")
 
 # --- NEW: Batch Processor ---
 def batch_process(input_folder, output_folder, start, end):
