@@ -1,5 +1,15 @@
+import hashlib
 import os
 from pydub import AudioSegment, effects
+
+# --- File Integrity
+def generate_file_hash(filepath):
+    sha256_hash = hashlib.sha256()
+    with open(filepath, "rb") as f:
+        # Read in 4k blocks so we don't crash the RAM on the laptop
+        for byte_block in iter(lambda: f.read(4096), b"" ):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()
 
 # -- Stereo Width Function
 def apply_stereo_width(audio, delay_ms=20):
@@ -33,7 +43,6 @@ def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=80, lp_cut
     # --- Normalization ---
     print(f"Normalizing...")
     normalized = effects.normalize(filtered)
-    # --------------------------
 
     # --- Safety Limiter (-0.1 dB)
     if normalized.max_dBFS > -0.1:
@@ -48,7 +57,12 @@ def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=80, lp_cut
 
     # Export
     final_audio.export(output_file, format=export_format)
+
+    # Integrity Signature
+    sig = generate_file_hash(output_file)
+
     print(f"Done: {output_file}")
+    print(f"SHA-256 Signature: {sig}")
 
 # --- NEW: Batch Processor ---
 def batch_process(input_folder, output_folder, start, end):
