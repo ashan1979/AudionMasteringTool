@@ -1,8 +1,6 @@
 import hashlib
 import os
 import datetime
-from time import strftime
-
 from pydub import AudioSegment, effects
 
 # --- File Integrity
@@ -15,7 +13,7 @@ def generate_file_hash(filepath):
     return sha256_hash.hexdigest()
 
 # -- Stereo Width Function
-def apply_stereo_width(audio, delay_ms=20):
+def apply_stereo_width(audio, delay_ms=20, dry_wet=0.3):
     if audio.channels == 1:
         audio = audio.set_channels(2)
 
@@ -26,49 +24,44 @@ def apply_stereo_width(audio, delay_ms=20):
     silence = AudioSegment.silent(duration=delay_ms)
     delayed_right = (silence + right_channel)[:len(left_channel)]
 
-    return AudioSegment.from_mono_audiostreams(left_channel, delayed_right)
+    widened = AudioSegment.from_mono_audiostreams(left_channel, delayed_right)
+    return AudioSegment.overlay(audio, widened, gain_during_overlay=10 * dry_wet - 10)
 
-def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=80, lp_cutoff=10000, fade_ms=50, export_format="wav"):
-    # pydub works in milliseconds
+def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=40, lp_cutoff=15000, fade_ms=50, export_format="wav"):
     start_ms = start_sec * 1000
     end_ms = end_sec * 1000
 
     print(f"Loading {input_file}...")
     audio = AudioSegment.from_file(input_file)
-
-    print(f"Snipping ...")
-    snip = audio[start_ms:end_ms]
+    processed = audio[start_ms:end_ms]
 
     # --- EQ Filters ---
     print(f"Applying Filters ...")
-    filtered = snip.high_pass_filter(hp_cutoff).low_pass_filter(lp_cutoff)
-
-    # --- Normalization ---
-    print(f"Normalizing...")
-    normalized = effects.normalize(filtered)
-
-    # --- Safety Limiter (-0.1 dB)
-    if normalized.max_dBFS > -0.1:
-        normalized = normalized - (normalized.max_dBFS + 0.1)
+    processed = processed.high_pass_filter(hp_cutoff).low_pass_filter(lp_cutoff)
 
     # --- Stereo Widening ---
     print(f"Applying Stereo Widening---")
-    widened = apply_stereo_width(normalized, delay_ms=25)
+    processed = apply_stereo_width(processed, delay_ms=25, dry_wet=0.25)
+
+    # --- Normalization & Limiter---
+    print(f"Normalizing & Limiting...")
+    final_master = effects.normalize(processed, headroom=0.1)
+
     # --- Fades ---
     print(f"Applying {fade_ms}ms Fades...")
-    final_audio = widened.fade_in(fade_ms).fade_out(fade_ms)
+    final_master = final_master.fade_in(fade_ms).fade_out(fade_ms)
 
     # Export
-    final_audio.export(output_file, format=export_format)
-    now = datetime.datetime.now(),strftime("%H:%M:%S")
+    final_master.export(output_file, format=export_format)
 
-    # Integrity Signature
+    # Metadata and Signatures
+    now = datetime.datetime.now().strftime("%H:%M:%S")
     sig = generate_file_hash(output_file)
 
     print(f"[{now}] Done: {output_file}")
     print(f"[{now}] SHA-256 Signature: {sig}")
 
-# --- NEW: Batch Processor ---
+# --- Batch Processor ---
 def batch_process(input_folder, output_folder, start, end):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -77,11 +70,5 @@ def batch_process(input_folder, output_folder, start, end):
         if filename.endswith((".wav", ".mp3", ".flac")):
             input_path = os.path.join(input_folder, filename)
             output_path = os.path.join(output_folder, f"mastered_{filename}")
-
-            # --- Extract the extension
             ext = filename.split('.')[-1]
-
             snip_audio(input_path, start, end, output_path, export_format=ext)
-
-# Example usage (uncomment and change 'my_song.wav' to a real file you have)
-# snip_audio("my_song.wav", 10, 20, "snip_output.wav")
