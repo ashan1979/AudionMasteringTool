@@ -27,6 +27,14 @@ def apply_stereo_width(audio, delay_ms=20, dry_wet=0.3):
     widened = AudioSegment.from_mono_audiostreams(left_channel, delayed_right)
     return AudioSegment.overlay(audio, widened, gain_during_overlay=10 * dry_wet - 10)
 
+def apply_safe_stereo_width(audio, crossover_freq=200, delay_ms=25, dry_wet=0.25):
+    low_end = audio.low_pass_filter(crossover_freq).set_channels(1).set_channels(2)
+    high_end = audio.high_pass_filter(crossover_freq)
+    widened_highs = apply_stereo_width(high_end, delay_ms=delay_ms, dry_wet=dry_wet)
+
+    return low_end.overlay(widened_highs)
+
+
 def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=40, lp_cutoff=15000, fade_ms=50, export_format="wav"):
     start_ms = start_sec * 1000
     end_ms = end_sec * 1000
@@ -41,7 +49,7 @@ def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=40, lp_cut
 
     # --- Stereo Widening ---
     print(f"Applying Stereo Widening---")
-    processed = apply_stereo_width(processed, delay_ms=25, dry_wet=0.25)
+    processed = apply_safe_stereo_width(processed, crossover_freq=200, delay_ms=25, dry_wet=0.25)
 
     # --- Normalization & Limiter---
     print(f"Normalizing & Limiting...")
