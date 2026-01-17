@@ -1,6 +1,8 @@
 import hashlib
 import os
 import datetime
+import numpy as np
+import pyloudnorm as lnr
 from pydub import AudioSegment, effects
 
 # --- File Integrity
@@ -11,6 +13,17 @@ def generate_file_hash(filepath):
         for byte_block in iter(lambda: f.read(4096), b"" ):
             sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
+
+def measure_loudness(audio_segment):
+    samples = np.array(audio_segment.get_array_of_samples()).astype(np.float32)
+
+    if audio_segment.channels == 2:
+        samples = samples.reshape((-1, 2))
+    samples =  samples / (2**15) if audio_segment.sample_width == 2 else samples / (2**31)
+
+    meter = lnr.Meter(audio_segment.frame_rate)
+    loudness =  meter.integrated_loudness(samples)
+    return loudness
 
 # -- Stereo Width Function
 def apply_stereo_width(audio, delay_ms=20, dry_wet=0.3):
@@ -34,6 +47,11 @@ def apply_safe_stereo_width(audio, crossover_freq=200, delay_ms=25, dry_wet=0.25
 
     return low_end.overlay(widened_highs)
 
+def match_target_lufs(audio, target_lufs=-14.0):
+    current_lufs = measure_loudness(audio)
+    gain_needed = target_lufs - current_lufs
+    return audio.apply_gain(gain_needed)
+
 
 def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=40, lp_cutoff=15000, fade_ms=50, export_format="wav"):
     start_ms = start_sec * 1000
@@ -52,8 +70,19 @@ def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=40, lp_cut
     processed = apply_safe_stereo_width(processed, crossover_freq=200, delay_ms=25, dry_wet=0.25)
 
     # --- Normalization & Limiter---
-    print(f"Normalizing & Limiting...")
+    print(f"Targeting -14 LUFs & Limiting...")
+    processed = match_target_lufs(processed, target_lufs=-14.0)
+
     final_master = effects.normalize(processed, headroom=0.1)
+
+    # --- Lufs ---
+    lufs = measure_loudness(final_master)
+    print(f"Loudness: {lufs:.2f} LUFS")
+
+    if lufs < -16:
+        print("Note: This track might be a bit quiet for streaming (-14 LUFs is the target).")
+    elif lufs > -9:
+        print("Note: This track is very loud/compressed (Club/EDM levels).")
 
     # --- Fades ---
     print(f"Applying {fade_ms}ms Fades...")
