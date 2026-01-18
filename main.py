@@ -91,6 +91,10 @@ def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=40, lp_cut
     # Export
     final_master.export(output_file, format=export_format)
 
+    # Visualizer Call
+    import visualizer
+    visualizer.visualize_mastering(input_file, output_file)
+
     # Metadata and Signatures
     now = datetime.datetime.now().strftime("%H:%M:%S")
     sig = generate_file_hash(output_file)
