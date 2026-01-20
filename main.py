@@ -4,6 +4,9 @@ import datetime
 import numpy as np
 import pyloudnorm as lnr
 from pydub import AudioSegment, effects
+import visualizer
+
+
 
 # --- File Integrity
 def generate_file_hash(filepath):
@@ -92,7 +95,6 @@ def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=40, lp_cut
     final_master.export(output_file, format=export_format)
 
     # Visualizer Call
-    import visualizer
     visualizer.visualize_mastering(input_file, output_file)
 
     # Metadata and Signatures
