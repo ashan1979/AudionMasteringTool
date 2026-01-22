@@ -8,6 +8,7 @@ import visualizer
 
 
 
+
 # --- File Integrity
 def generate_file_hash(filepath):
     sha256_hash = hashlib.sha256()

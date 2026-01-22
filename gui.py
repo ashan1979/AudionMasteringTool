@@ -1,6 +1,9 @@
 import tkinter as tk
+from threading import Thread
 from tkinter import filedialog, messagebox
 import  main
+import threading
+import os
 
 class MasteringApp:
     def __init__(self, root):
@@ -37,18 +40,25 @@ class MasteringApp:
         if not self.input_path.get():
             messagebox.showerror("Error", "Please select a file first")
             return
+        def task():
+            self.master_btn.config(state="disabled", text="Processing...")
+            try:
+                start = float(self.start_entry.get())
+                end = float(self.end_entry.get())
 
-        output_file = "mastered_output.wav"
-        try:
-            # Converting entry strings to floats
-            start = float(self.start_entry.get())
-            end = float(self.end_entry.get())
+                input_filename = os.path.basename(self.input_path.get())
+                output_file = f"mastered_{input_filename}"
 
             # Calling main function
-            main.snip_audio(self.input_path.get(), start, end, output_file)
-            messagebox.showinfo("Success", f"Mastering Complete!\nSaved as {output_file}")
-        except Exception as e:
-             messagebox.showerror("Mastering Errot", str(e))
+                main.snip_audio(self.input_path.get(), start, end, output_file)
+                messagebox.showinfo("Success", f"Mastering Complete!\nSaved as {output_file}")
+            except Exception as e:
+                 messagebox.showerror("Mastering Error", str(e))
+            finally:
+                self.master_btn.config(state="normal", text="MASTER & VISUALIZE")
+
+        thread = threading.Thread(target=task, daemon=True)
+        thread.start()
 
 if __name__ == "__main__":
     root = tk.Tk()

@@ -7,8 +7,8 @@ from librosa.display import specshow
 
 def visualize_mastering(original_path, mastered_path):
     #Load audio (default 22050Hz for analysis)
-    y_orig, sr = librosa.load(original_path, sr=None, duration=30)
-    y_mast, _ = librosa.load(mastered_path, sr=sr, duration=30)
+    y_orig, sr = librosa.load(original_path, sr=None)
+    y_mast, _ = librosa.load(mastered_path, sr=sr)
 
     plt.style.use('dark_background')
     fig, axes = plt.subplots(2, 2, figsize=(14, 10), sharex='col', sharey='row')
@@ -23,7 +23,7 @@ def visualize_mastering(original_path, mastered_path):
     axes[0, 1].set_title("Mastered Waveform")
 
     # --- ROW 2 : SPECTOGRAMS (Frequencies) ---
-    hop_length = 512
+    hop_length = 1024
     D_orig = librosa.amplitude_to_db(np.abs(librosa.stft(y_orig, hop_length=hop_length)), ref=np.max)
     librosa.display.specshow(D_orig, sr=sr, x_axis='time', y_axis='log', ax=axes[1, 0])
     axes[1, 0].set_title("Original Spectrum")
