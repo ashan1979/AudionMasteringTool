@@ -6,7 +6,15 @@ import pyloudnorm as lnr
 from pydub import AudioSegment, effects
 import visualizer
 
+def apply_soft_clip(audio_segment):
+    samples = np.array(audio_segment.get_array_of_samples()).astype(np.float32)
+    denom =  2**15 if audio_segment.sample_width == 2 else 2**31
+    samples = samples / denom
 
+    clipped = np.tanh(samples)
+
+    final_samples = (clipped * denom).astype(np.int16 if audio_segment.sample_width == 2 else np.int32)
+    return audio_segment._spawn(final_samples.tobytes())
 
 
 # --- File Integrity
@@ -57,7 +65,7 @@ def match_target_lufs(audio, target_lufs=-14.0):
     return audio.apply_gain(gain_needed)
 
 
-def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=40, lp_cutoff=15000, fade_ms=50, export_format="wav"):
+def snip_audio(input_file, start_sec, end_sec, output_file, use_clipper=False, hp_cutoff=40, lp_cutoff=15000, fade_ms=50, export_format="wav"):
     start_ms = start_sec * 1000
     end_ms = end_sec * 1000
 
@@ -77,7 +85,12 @@ def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=40, lp_cut
     print(f"Targeting -14 LUFs & Limiting...")
     processed = match_target_lufs(processed, target_lufs=-14.0)
 
-    final_master = effects.normalize(processed, headroom=0.1)
+    if use_clipper:
+        print("Applying Soft Clipping (Warmth)...")
+        final_master = apply_soft_clip(processed)
+    else:
+        print("Applying CLean Normalization...")
+        final_master = effects.normalize(processed, headroom=0.1)
 
     # --- Lufs ---
     lufs = measure_loudness(final_master)
@@ -106,7 +119,7 @@ def snip_audio(input_file, start_sec, end_sec, output_file, hp_cutoff=40, lp_cut
     print(f"[{now}] SHA-256 Signature: {sig}")
 
 # --- Batch Processor ---
-def batch_process(input_folder, output_folder, start, end):
+def batch_process(input_folder, output_folder, start, end, use_clipper=False):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -115,4 +128,4 @@ def batch_process(input_folder, output_folder, start, end):
             input_path = os.path.join(input_folder, filename)
             output_path = os.path.join(output_folder, f"mastered_{filename}")
             ext = filename.split('.')[-1]
-            snip_audio(input_path, start, end, output_path, export_format=ext)
+            snip_audio(input_path, start, end, output_path, use_clipper=use_clipper, export_format=ext)
