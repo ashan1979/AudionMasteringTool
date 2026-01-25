@@ -36,4 +36,7 @@ def visualize_mastering(original_path, mastered_path):
     fig.colorbar(img2, ax=axes[1, :], format="%+2.0f dB")
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-    plt.show()
+    image_filename =  mastered_path.rsplit(".", 1)[0] + "_analysis.png"
+    plt.savefig(image_filename)
+    plt.close()
+    print(f"Visual analysis saved as: {image_filename}")
