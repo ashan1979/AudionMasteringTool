@@ -59,11 +59,19 @@ def apply_safe_stereo_width(audio, crossover_freq=200, delay_ms=25, dry_wet=0.25
 
     return low_end.overlay(widened_highs)
 
-def match_target_lufs(audio, target_lufs=-14.0):
-    current_lufs = measure_loudness(audio)
-    gain_needed = target_lufs - current_lufs
-    return audio.apply_gain(gain_needed)
+def apply_limiter(audio_segment, ceiling=-1.0):
+    current_peak =  audio_segment.max_dBFS
+    if current_peak > ceiling:
+        reduction = ceiling - current_peak
+        return audio_segment.apply_gain(reduction)
+    return audio_segment
 
+def match_target_lufs(audio, target_lufs=-14.0, ceiling=-1.0):
+    current_lufs = measure_loudness(audio)
+    gain_needed =  target_lufs - current_lufs
+
+    audio = audio.apply_gain(gain_needed)
+    return apply_limiter(audio, ceiling=ceiling)
 
 def snip_audio(input_file, start_sec, end_sec, output_file, use_clipper=False, hp_cutoff=40, lp_cutoff=15000, fade_ms=50, export_format="wav"):
     start_ms = start_sec * 1000
@@ -83,11 +91,12 @@ def snip_audio(input_file, start_sec, end_sec, output_file, use_clipper=False, h
 
     # --- Normalization & Limiter---
     print(f"Targeting -14 LUFs & Limiting...")
-    processed = match_target_lufs(processed, target_lufs=-14.0)
+    processed = match_target_lufs(processed, target_lufs=-14.0, ceiling=-1.0)
 
     if use_clipper:
         print("Applying Soft Clipping (Warmth)...")
-        final_master = apply_soft_clip(processed)
+        processed = apply_soft_clip(processed)
+        final_master = apply_limiter(processed, ceiling=-1.0)
     else:
         print("Applying CLean Normalization...")
         final_master = effects.normalize(processed, headroom=0.1)
