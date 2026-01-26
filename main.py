@@ -37,6 +37,17 @@ def measure_loudness(audio_segment):
     loudness =  meter.integrated_loudness(samples)
     return loudness
 
+def check_mono_compatibility(audio_segment):
+    mono_version = audio_segment.set_channels(1)
+
+    stereo_lufs =  measure_loudness(audio_segment)
+    mono_lufs = measure_loudness(mono_version)
+
+    phase_drop = stereo_lufs - mono_lufs
+    if phase_drop > 3.0:
+        print(f"⚠️Warning: Large phase drop ({phase_drop:.2f} dB). Your master might sound 'hollow' in mono.")
+    return phase_drop
+
 # -- Stereo Width Function
 def apply_stereo_width(audio, delay_ms=20, dry_wet=0.3):
     if audio.channels == 1:
@@ -135,18 +146,30 @@ def snip_audio(input_file, start_sec, end_sec, output_file, use_clipper=False, h
     print(f"Applying {fade_ms}ms Fades...")
     final_master = final_master.fade_in(fade_ms).fade_out(fade_ms)
 
+    # --- FINAL ANALYSIS BLOCK --
+    lufs = measure_loudness(final_master)
+    print(f"Loudness: {lufs:.2f} LUFs")
+    check_mono_compatibility(final_master)
+
+    # Metadata and Signatures
+    now_full = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now_short = datetime.datetime.now().strftime("%H:%M:%S")
+
+
     # Export
-    final_master.export(output_file, format=export_format)
+    final_master.export(output_file, format=export_format, tags={
+        "artist": "Mastered by Python Tool",
+        "date": now_full
+    })
+
+    # Generate Final Signature
+    sig = generate_file_hash(output_file)
 
     # Visualizer Call
     visualizer.visualize_mastering(input_file, output_file)
 
-    # Metadata and Signatures
-    now = datetime.datetime.now().strftime("%H:%M:%S")
-    sig = generate_file_hash(output_file)
-
-    print(f"[{now}] Done: {output_file}")
-    print(f"[{now}] SHA-256 Signature: {sig}")
+    print(f"[{now_short}] Done: {output_file}")
+    print(f"[{now_short}] SHA-256 Signature: {sig}")
 
 # --- Batch Processor ---
 def batch_process(input_folder, output_folder, start, end, use_clipper=False):
