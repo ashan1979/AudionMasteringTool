@@ -73,13 +73,34 @@ def match_target_lufs(audio, target_lufs=-14.0, ceiling=-1.0):
     audio = audio.apply_gain(gain_needed)
     return apply_limiter(audio, ceiling=ceiling)
 
+def find_zero_crossing(audio_segment, target_ms):
+    samples = np.array(audio_segment.get_array_of_samples())
+    target_idx = int((target_ms / 1000.0) * audio_segment.frame_rate)
+
+    search_range = int(0.020 * audio_segment.frame_rate)
+    start_search = max(0, target_idx - search_range)
+    end_search = min(len(samples) - 1, target_idx + search_range)
+
+    sub_section = samples[start_search:end_search]
+    zero_cross_idx = np.where(np.diff(np.sign(sub_section)))[0]
+
+    if len(zero_cross_idx) > 0:
+        best_match = zero_cross_idx[np.abs(zero_cross_idx - (target_idx - start_search)).argmin()]
+        return  (start_search + best_match) / audio_segment.frame_rate * 1000
+    return target_ms
+
 def snip_audio(input_file, start_sec, end_sec, output_file, use_clipper=False, hp_cutoff=40, lp_cutoff=15000, fade_ms=50, export_format="wav"):
     start_ms = start_sec * 1000
     end_ms = end_sec * 1000
 
     print(f"Loading {input_file}...")
     audio = AudioSegment.from_file(input_file)
-    processed = audio[start_ms:end_ms]
+
+    # --- SMART SNIP LOGIC START ---
+    print(f"Aligning to zero-crossings...")
+    smart_start = find_zero_crossing(audio, start_ms)
+    smart_end = find_zero_crossing(audio, end_ms)
+    processed = audio[smart_start:smart_end]
 
     # --- EQ Filters ---
     print(f"Applying Filters ...")
