@@ -64,7 +64,7 @@ class MasteringApp:
             # Calling main function
                 main.snip_audio(self.input_path.get(), start, end, output_file, use_clipper=clipper_status)
 
-                self.status_label.config(text="Status: DOne!", fg="green")
+                self.status_label.config(text="Status: Done!", fg="green")
                 messagebox.showinfo("Success", f"Mastering Complete!\nSaved as {output_file}")
             except Exception as e:
                 self.status_label.config(text="Status: Error!", fg="red")

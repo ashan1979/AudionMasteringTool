@@ -6,7 +6,9 @@ import pyloudnorm as lnr
 from pydub import AudioSegment, effects
 import visualizer
 
-def apply_soft_clip(audio_segment):
+def apply_soft_clip(audio_segment, drive_db=3.0):
+    audio_segment = audio_segment.apply_gain(drive_db)
+
     samples = np.array(audio_segment.get_array_of_samples()).astype(np.float32)
     denom =  2**15 if audio_segment.sample_width == 2 else 2**31
     samples = samples / denom
@@ -14,7 +16,7 @@ def apply_soft_clip(audio_segment):
     clipped = np.tanh(samples)
 
     final_samples = (clipped * denom).astype(np.int16 if audio_segment.sample_width == 2 else np.int32)
-    return audio_segment._spawn(final_samples.tobytes())
+    return audio_segment._spawn(final_samples.tobytes()).apply_gain(-drive_db)
 
 
 # --- File Integrity
@@ -130,7 +132,7 @@ def snip_audio(input_file, start_sec, end_sec, output_file, use_clipper=False, h
         processed = apply_soft_clip(processed)
         final_master = apply_limiter(processed, ceiling=-1.0)
     else:
-        print("Applying CLean Normalization...")
+        print("Applying Clean Normalization...")
         final_master = effects.normalize(processed, headroom=0.1)
 
     # --- Lufs ---
