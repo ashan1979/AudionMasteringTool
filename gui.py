@@ -8,7 +8,7 @@ import os
 class MasteringApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Python Audio Mastering Tool v1.1")
+        self.root.title("Ashan's Python Audio Mastering Tool v1.1")
         self.root.geometry("450x550")
         self.root.configure(bg="#1e1e1e")
 

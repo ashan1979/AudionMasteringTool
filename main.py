@@ -66,7 +66,10 @@ def apply_ms_tonal_balance(audio_segment, side_gain_db=2.0):
 
     return  AudioSegment.from_mono_audiostreams(new_left, new_right)
 
-
+def appy_dither(audio_segment):
+    # Adds very low-level white noise (-110dBish) to preserve low-level detail
+    white_noise = effects.strip_silence(audio_segment).apply_gain(-110)
+    return audio_segment.overlay(white_noise)
 
 def apply_soft_clip(audio_segment, drive_db=3.0):
     audio_segment = audio_segment.apply_gain(drive_db)
@@ -181,6 +184,10 @@ def snip_audio(input_file, start_sec, end_sec, output_file, use_clipper=False, h
     print(f"Applying Filters ...")
     processed = processed.high_pass_filter(hp_cutoff).low_pass_filter(lp_cutoff)
 
+    # --- Tilt EQ ---
+    processed = apply_til_eq(processed, tilt_amount=1.0)
+
+    # --- Mid/Side Processing
     print(f"Applying Mid-Side Processing ...")
     processed = apply_ms_tonal_balance(processed, side_gain_db=1.5)
 
@@ -221,6 +228,9 @@ def snip_audio(input_file, start_sec, end_sec, output_file, use_clipper=False, h
     # Metadata and Signatures
     now_full = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     now_short = datetime.datetime.now().strftime("%H:%M:%S")
+
+    # --- Apply Dither ---
+    final_master = appy_dither(final_master)
 
 
     # Export
