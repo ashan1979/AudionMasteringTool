@@ -5,6 +5,48 @@ import numpy as np
 import pyloudnorm as lnr
 from pydub import AudioSegment, effects
 import visualizer
+from scipy.signal import butter, lfilter
+
+def apply_til_eq(audio_segment, tilt_amount=0):
+    """
+    tilt_amount: dB gain/cut at the frequency extremes.
+    Positive = Brighter (High boost, Low cut)
+    Negative = Warmer (Low boost, High cut)
+    """
+
+    if tilt_amount == 0.0:
+        return audio_segment
+
+    # Convert to numpy
+    samples = np.array(audio_segment.get_array_of_samples()).astype(np.float32)
+    sr = audio_segment.frame_rate
+
+    # simple tilt filter logic (First-order shelving filter)
+    # We use a center frequency of 1000hz
+    f0 = 1000.0
+    omega0 = 2 * np.pi * f0 / sr
+    gain = 10**(tilt_amount / 40.0) # Distributed gain
+
+    # Coefficient calculation for a simple tilt
+    alpha = (gain - 1) / (gain + 1)
+    b = [1.0, alpha]
+    a = [1.0, alpha * 0.5]
+
+    # Apply filter
+    if audio_segment.channels == 2:
+        samples = samples.reshape((-1, 2))
+        left = lfilter(b, a, samples[:, 0])
+        right = lfilter(b, a, samples[:, 1])
+        processed_samples = np.column_stack((left, right)).flatten()
+    else:
+        processed_samples = lfilter(b, a, samples)
+
+    # Re-normalize to original bit depth
+    denom = 2**15 if audio_segment.sample_width == 2 else 2**31
+    final_samples = np.clip(processed_samples, -denom, denom-1).astype(np.int16 if audio_segment.sample_width == 2 else np.int32)
+
+    return audio_segment._spawn(final_samples.tobytes())
+
 
 def apply_soft_clip(audio_segment, drive_db=3.0):
     audio_segment = audio_segment.apply_gain(drive_db)
