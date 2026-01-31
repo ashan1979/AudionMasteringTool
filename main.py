@@ -48,7 +48,7 @@ def apply_til_eq(audio_segment, tilt_amount=0):
     return audio_segment._spawn(final_samples.tobytes())
 
 def apply_ms_tonal_balance(audio_segment, side_gain_db=2.0):
-    # If Audio is mono theres no side channel to process
+    # If Audio is mono there's no side channel to process
     if audio_segment.channels < 2:
         return audio_segment
     # 1. Split to Mono (L/R)
@@ -69,7 +69,7 @@ def apply_ms_tonal_balance(audio_segment, side_gain_db=2.0):
 
     return  AudioSegment.from_mono_audiostreams(new_left, new_right)
 
-def appy_dither(audio_segment):
+def apply_dither(audio_segment):
     # Adds very low-level white noise (-110dBish) to preserve low-level detail
     white_noise = effects.strip_silence(audio_segment).apply_gain(-110)
     return audio_segment.overlay(white_noise)
@@ -130,7 +130,12 @@ def apply_stereo_width(audio, delay_ms=20, dry_wet=0.3):
     silence = AudioSegment.silent(duration=delay_ms)
     delayed_right = (silence + right_channel)[:len(left_channel)]
 
-    widened = AudioSegment.from_mono_audiostreams(left_channel, delayed_right)
+    min_len = min(len(left_channel), len(delayed_right))
+
+    left_final = left_channel[:min_len]
+    right_final = delayed_right[:min_len]
+
+    widened = AudioSegment.from_mono_audiosegments(left_final, right_final)
     return AudioSegment.overlay(audio, widened, gain_during_overlay=10 * dry_wet - 10)
 
 def apply_safe_stereo_width(audio, crossover_freq=200, delay_ms=25, dry_wet=0.25):
@@ -233,7 +238,7 @@ def snip_audio(input_file, start_sec, end_sec, output_file, use_clipper=False, h
     now_short = datetime.datetime.now().strftime("%H:%M:%S")
 
     # --- Apply Dither ---
-    final_master = appy_dither(final_master)
+    final_master = apply_dither(final_master)
 
 
     # Export
