@@ -48,6 +48,9 @@ def apply_til_eq(audio_segment, tilt_amount=0):
     return audio_segment._spawn(final_samples.tobytes())
 
 def apply_ms_tonal_balance(audio_segment, side_gain_db=2.0):
+    # If Audio is mono theres no side channel to process
+    if audio_segment.channels < 2:
+        return audio_segment
     # 1. Split to Mono (L/R)
     channels = audio_segment.split_to_mono()
     left, right = channels[0], channels[1]
