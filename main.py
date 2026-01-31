@@ -47,6 +47,26 @@ def apply_til_eq(audio_segment, tilt_amount=0):
 
     return audio_segment._spawn(final_samples.tobytes())
 
+def apply_ms_tonal_balance(audio_segment, side_gain_db=2.0):
+    # 1. Split to Mono (L/R)
+    channels = audio_segment.split_to_mono()
+    left, right = channels[0], channels[1]
+
+    # 2. Encode to Mid/Side
+    mid = left.overlay(right, gain_during_overlay=-3.0) # (L/R)/2
+    side = left.overlay(right.invert_phase(), gain_during_overlay=-3.0) # (L/R)/2
+
+    # 3. Process the Side channel (e.g., make the sides brighter)
+    side = side.high_pass_filter(500).apply_gain(side_gain_db)
+
+    # 4. Decode back to Stereo
+    # L = Mid + Side, R = Mid - Side
+    new_left = mid.overlay(side)
+    new_right = mid.overlay(side.invert_phase())
+
+    return  AudioSegment.from_mono_audiostreams(new_left, new_right)
+
+
 
 def apply_soft_clip(audio_segment, drive_db=3.0):
     audio_segment = audio_segment.apply_gain(drive_db)
@@ -160,6 +180,9 @@ def snip_audio(input_file, start_sec, end_sec, output_file, use_clipper=False, h
     # --- EQ Filters ---
     print(f"Applying Filters ...")
     processed = processed.high_pass_filter(hp_cutoff).low_pass_filter(lp_cutoff)
+
+    print(f"Applying Mid-Side Processing ...")
+    processed = apply_ms_tonal_balance(processed, side_gain_db=1.5)
 
     # --- Stereo Widening ---
     print(f"Applying Stereo Widening---")
