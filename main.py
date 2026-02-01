@@ -197,7 +197,7 @@ def snip_audio(input_file, start_sec, end_sec, output_file, use_clipper=False, h
 
     # --- Mid/Side Processing
     print(f"Applying Mid-Side Processing ...")
-    processed = apply_ms_tonal_balance(processed, side_gain_db=1.5)
+    processed = apply_ms_tonal_balance(processed, side_gain_db=0.7)
 
     # --- Stereo Widening ---
     print(f"Applying Stereo Widening---")

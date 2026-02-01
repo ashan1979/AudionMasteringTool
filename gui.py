@@ -73,10 +73,14 @@ class MasteringApp:
             self.input_path.set(filename)
             self.log(f"Loaded: {os.path.basename(filename)}")
 
+    def show_success(self, output_file):
+        messagebox.showinfo("Success", f"Mastering Complete!\nSaved as {output_file}")
+
     def run_mastering(self):
         if not self.input_path.get():
             messagebox.showerror("Error", "Please select a file first")
             return
+
 
         def task():
             self.master_btn.config(state="disabled", text="PROCESSING...")
@@ -104,7 +108,7 @@ class MasteringApp:
 
                 self.log("Generating visual analysis...")
                 self.log(f"SUCCESS {output_file}")
-                messagebox.showinfo("Success", f"Mastering Complete!\nSaved as {output_file}")
+                self.root.after(0, lambda : self.show_success(output_file))
 
             except ValueError:
                 self.log("ERROR: Please use numbers only in the settings.")
@@ -112,7 +116,7 @@ class MasteringApp:
                 return  # Stop the task here
             except Exception as e:
                 self.log(f"ERROR: {str(e)}")
-                messagebox.showerror("Mastering Error", str(e))
+                self.root.after(0, lambda : messagebox.showerror("Mastering Error", str(e)))
             finally:
                 self.master_btn.config(state="normal", text="RENDER MASTER")
 
