@@ -83,10 +83,11 @@ class MasteringApp:
             self.log("Initializing engine...")
             try:
                 # Gather UI data
-                start = float(self.start_entry.get())
-                end = float(self.end_entry.get())
-                hp = int(self.hp_entry.get())
-                lp = int(self.lp_entry.get())
+                start = float(self.start_entry.get() or 0)
+                end = float(self.end_entry.get() or 0)
+                hp = int(self.hp_entry.get() or 0)
+                lp = int(self.lp_entry.get() or 0)
+
                 clipper_status = self.use_clipper.get()
 
                 input_file = self.input_path.get()
@@ -97,14 +98,18 @@ class MasteringApp:
 
                 # Execute engine
                 main.snip_audio(input_file, start, end, output_file,
-                                 use_clipper=clipper_status,
-                                hp_cutoff=hp,
-                                lp_cutoff=lp)
+                            use_clipper=clipper_status,
+                            hp_cutoff=hp,
+                            lp_cutoff=lp)
 
                 self.log("Generating visual analysis...")
                 self.log(f"SUCCESS {output_file}")
                 messagebox.showinfo("Success", f"Mastering Complete!\nSaved as {output_file}")
 
+            except ValueError:
+                self.log("ERROR: Please use numbers only in the settings.")
+                messagebox.showerror("Input Error", "Invalid numbers in EQ or Snipping fields ")
+                return  # Stop the task here
             except Exception as e:
                 self.log(f"ERROR: {str(e)}")
                 messagebox.showerror("Mastering Error", str(e))
