@@ -7,6 +7,20 @@ from pydub import AudioSegment, effects
 import visualizer
 from scipy.signal import butter, lfilter
 
+def calculate_phase_correlation(audio_segment):
+    samples = np.array(audio_segment.get_array_of_samples()).astype(np.float32)
+
+    if audio_segment.channels < 2:
+        return 1.0
+
+    samples = samples.reshape((-1, 2))
+    left = samples[:, 0]
+    right = samples[:, 1]
+
+    correlation_matrix = np.corrcoef(left, right)
+
+    return  correlation_matrix[0, 1]
+
 def apply_til_eq(audio_segment, tilt_amount=0):
     """
     tilt_amount: dB gain/cut at the frequency extremes.

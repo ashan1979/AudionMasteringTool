@@ -106,6 +106,23 @@ class MasteringApp:
                             hp_cutoff=hp,
                             lp_cutoff=lp)
 
+                # --- Phase analysis block ---
+                self.log("Analyzing phase correlation...")
+                from pydub import AudioSegment
+
+                check_audio = AudioSegment.from_file(output_file)
+                phase_val = main.calculate_phase_correlation(check_audio)
+
+                self.log(f"Phase Correlation: {phase_val:.2f}")
+                if phase_val < 0:
+                    self.log(" CRITICAL: Phase is negative! Mono-sum will cancel out.")
+                elif phase_val < 0.3:
+                    self.log(" WARNING: Very wide stereo. Check mono compatibility")
+                else:
+                    self.log(" Phase is healthy.")
+
+                # ----------------------------------------------------------------------
+
                 self.log("Generating visual analysis...")
                 self.log(f"SUCCESS {output_file}")
                 self.root.after(0, lambda : self.show_success(output_file))
