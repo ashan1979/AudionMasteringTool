@@ -189,7 +189,35 @@ def find_zero_crossing(audio_segment, target_ms):
         return  (start_search + best_match) / audio_segment.frame_rate * 1000
     return target_ms
 
-def snip_audio(input_file, start_sec, end_sec, output_file, use_clipper=False, hp_cutoff=40, lp_cutoff=15000, fade_ms=50, export_format="wav"):
+def apply_safe_width(audio_segment, width_factor=1.0):
+    """
+    width_factor: 1.0 is original, >1,0 is wider, <1.0 is narrower.
+    Mathematically safe for mono compatibility.
+    """
+
+    if audio_segment.channels < 2:
+        return audio_segment
+
+    # 1. Split to mono
+    channels = audio_segment.split_to_mono()
+    left, right = channels[0], channels[1]
+
+    # 2. Encode to Mid/Side
+    mid = left.overlay(right, gain_during_overlay=-3.0)
+    side = left.overlay(right.invert_phase(), gain_during_overlay=-3.0)
+
+    # 3. Apply width factor (Scale the side channel)
+    # Convert factor to dB: 1.2x width is about +1.6 dB on sides
+    if width_factor != 1.0:
+        side = side.apply_gain(20 * np.log10(width_factor))
+
+    # 4. Decode back to stereo
+    new_left = mid.overlay(side)
+    new_right = mid.overlay(side.invert_phase())
+
+    return AudioSegment.from_mono_audiosegments(new_left, new_right)
+
+def snip_audio(input_file, start_sec, end_sec, output_file, use_clipper=False, hp_cutoff=40, stereo_width=1.0, lp_cutoff=15000, fade_ms=50, export_format="wav"):
     start_ms = start_sec * 1000
     end_ms = end_sec * 1000
 
@@ -214,8 +242,11 @@ def snip_audio(input_file, start_sec, end_sec, output_file, use_clipper=False, h
     processed = apply_ms_tonal_balance(processed, side_gain_db=0.7)
 
     # --- Stereo Widening ---
-    print(f"Applying Stereo Widening---")
-    processed = apply_safe_stereo_width(processed, crossover_freq=200, delay_ms=25, dry_wet=0.25)
+    # print(f"Applying Stereo Widening---")
+    # processed = apply_safe_stereo_width(processed, crossover_freq=200, delay_ms=25, dry_wet=0.25)
+    # --NEW--
+    print(f"Applying phase-safe Stereo Widening ({stereo_width}x)...")
+    processed = apply_safe_width(processed, width_factor=stereo_width)
 
     # --- Normalization & Limiter---
     print(f"Targeting -14 LUFs & Limiting...")

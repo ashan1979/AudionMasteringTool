@@ -54,6 +54,13 @@ class MasteringApp:
         tk.Checkbutton(settings_frame, text="Enable Soft Clipper (Warmth)", variable=self.use_clipper,
                        bg="#1e1e1e", fg="#d79921", selectcolor="#1e1e1e", activebackground="#1e1e1e").grid(row=2, column=0, columnspan=3, pady=10)
 
+        tk.Label(settings_frame, text="Stereo Width (0.5-2.0):", bg="#1e1e1e", fg="white").grid(row=3, column=0, sticky="w")
+        self.width_slider = tk.Scale(settings_frame, from_=0.5, to=2.0, resolution=0.1,
+                                     orient="horizontal", bg="#1e1e1e", fg="#d79921",
+                                     highlightthickness=0, troughcolor="#2d2d2d")
+        self.width_slider.set(1.0) # Natural origin width
+        self.width_slider.grid(row=3, column=1, columnspan=2, sticky="ew", pady=5)
+
         # Progress and Action
         self.master_btn = tk.Button(root, text="RENDER MASTER", bg="#d79921", fg="black",
                                     font=("Arial", 12, "bold"), height=2, command=self.run_mastering)
@@ -92,6 +99,7 @@ class MasteringApp:
                 hp = int(self.hp_entry.get() or 0)
                 lp = int(self.lp_entry.get() or 0)
 
+                stereo_w = float(self.width_slider.get())
                 clipper_status = self.use_clipper.get()
 
                 input_file = self.input_path.get()
@@ -99,12 +107,14 @@ class MasteringApp:
 
                 self.log(f"Snipping: {start}s to {end}s")
                 self.log(f"EQ: HP {hp}Hz | LP {lp}Hz")
+                self.log(f"Stereo Width: {stereo_w}x")
 
                 # Execute engine
-                main.snip_audio(input_file, start, end, output_file,
-                            use_clipper=clipper_status,
-                            hp_cutoff=hp,
-                            lp_cutoff=lp)
+                main.snip_audio(input_file, start, end,output_file,
+                                use_clipper=clipper_status,
+                                hp_cutoff=hp,
+                                lp_cutoff=lp,
+                                stereo_width=stereo_w)
 
                 # --- Phase analysis block ---
                 self.log("Analyzing phase correlation...")
