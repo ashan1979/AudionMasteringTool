@@ -81,7 +81,7 @@ def apply_ms_tonal_balance(audio_segment, side_gain_db=2.0):
     new_left = mid.overlay(side)
     new_right = mid.overlay(side.invert_phase())
 
-    return  AudioSegment.from_mono_audiostreams(new_left, new_right)
+    return AudioSegment.from_mono_audiosegments(new_left, new_right)
 
 def apply_dither(audio_segment):
     # Adds very low-level white noise (-110dBish) to preserve low-level detail

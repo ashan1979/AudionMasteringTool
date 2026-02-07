@@ -125,7 +125,7 @@ class MasteringApp:
 
                 self.log("Generating visual analysis...")
                 self.log(f"SUCCESS {output_file}")
-                self.root.after(0, lambda : self.show_success(output_file))
+                self.root.after(0, lambda f=output_file: self.show_success(f))
 
             except ValueError:
                 self.log("ERROR: Please use numbers only in the settings.")
@@ -133,7 +133,7 @@ class MasteringApp:
                 return  # Stop the task here
             except Exception as e:
                 self.log(f"ERROR: {str(e)}")
-                self.root.after(0, lambda : messagebox.showerror("Mastering Error", str(e)))
+                self.root.after(0, lambda err=e: messagebox.showerror("Mastering Error", str(err)))
             finally:
                 self.master_btn.config(state="normal", text="RENDER MASTER")
 
